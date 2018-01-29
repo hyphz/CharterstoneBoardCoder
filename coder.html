@@ -1,0 +1,147 @@
+<html>
+  <head>
+     <title>Test</title>
+<script>
+
+buildings = ["None","Alchemist Lab","Apothecary","Archetectura","Arena","Armory","Artificiary","Bakery","Bank","Banquet Hall","Barracks","Botanical Gardens",
+  "Brewery","Brick Market","Cafe","Candlemaker","Cartographer","Casino","Cat Cafe","Chancery","Chocolatier","Circus","Citadel","Clocktower",
+  "Clubhouse","Coal Market","Confectionary","Constructor","Courthouse","Crafter","Distillery","Drafting Room","Emporium","Fairgrounds","Foundry",
+  "Framer","Fuel Merchant","Gallery","Grain Market","Granary","Graveyard","Greenhouse","Guard Tower","Haunted House","Hoedown Hall","Hoist House","Infirmary",
+  "Inn","Iron Market","Junkyard","Kiln","Laboratory","Library","Lighthouse","Lumber Mill","Manor","Metallurgist","Monastery","Monument","Palace","Pastry Shop",
+  "Pavilion","Portal","Pub","Pumpkin Market","Pumpkin Spicery","Purfumery","Refinery","Reliquary","Repair Shop","Resort","Sanctuary","Shoemaker","Shrine","Silo",
+  "Sky Wharf","Smithy","Smugglers Lair","Spa","Statue","Storehouse","Studio","Tavern","Theater","Thieves Den","Veterinarian","Welder","Windmill","Winery","Wood Market","Workshop"];
+
+function loadSelects() {
+
+    var selects = document.getElementsByClassName("building");
+    for (var i=0; i<selects.length; i++) {
+       for (var j=0; j<buildings.length; j++) {
+           var opt = document.createElement("option");
+           opt.text = buildings[j];
+           opt.value = j;
+           selects[i].options.add(opt);
+       }
+       selects[i].value = 0;
+       selects[i].addEventListener("change", function(evt){ updateCode(); });
+    }
+    updateCode();
+
+}
+
+function updateCode() {
+    var datavals = [];
+    var selects = document.getElementsByClassName("building");
+    var selectIndex = 0;
+    var used = [];
+    var dupError = false;
+    for (var usedCheck=0; usedCheck<buildings.length; usedCheck++) {
+        used[usedCheck] = false;
+    }
+    
+    for (var charter=0; charter<6; charter++) {
+        var thisCharter = [];
+        for (var building=0; building<5; building++) {
+            var buildingNumber = selects[selectIndex++].value;
+            thisCharter.push(buildingNumber);
+            if (buildingNumber > 0) {
+                dupError = dupError || used[buildingNumber];
+                used[buildingNumber] = true;
+            }
+            
+        }
+        thisCharter.sort(function(a,b) { return a-b; });
+        Array.prototype.push.apply(datavals,thisCharter);
+    }
+
+    if (dupError) {
+        document.getElementById("outcode").value = "Invalid board, a building is duplicated.";
+        return;
+    }
+
+     var codeChars = "0123456789abcdefghijklmqnopqrstuvxwyzABCDEFGHIJKLMNOPQRSTUVWXYZ"; // 64 characters to code 6 bits each
+     
+    var buffer = 0;
+    var activeBit = 0;
+    var outCode = "";
+    var check = 0;
+
+    for (var i=0; i<datavals.length; i++) {
+        buffer = buffer + (datavals[i] << activeBit);
+        activeBit += 7;
+        while (activeBit >= 6) {
+	    outCode += codeChars[(buffer & 63)];        
+            check = check ^ buffer & 63;
+	    buffer = (buffer - (buffer & 63)) >> 6;
+            activeBit -= 6;
+        }
+    }
+    outCode += codeChars[check];
+    document.getElementById("outcode").value = outCode;
+
+}
+
+function decode() {
+    var codeChars = "0123456789abcdefghijklmqnopqrstuvxwyzABCDEFGHIJKLMNOPQRSTUVWXYZ"; // 64 characters to code 6 bits each
+    var buffer = 0;
+    var activeBit = 0;
+    var inCode = document.getElementById("incode").value;
+    var datavals = [];
+    var check =0;
+
+    for (var i=0; i<(inCode.length-1); i++) {
+        var thisval = codeChars.indexOf(inCode[i]);
+        check = check ^ thisval;
+        buffer = buffer + (thisval << activeBit);
+        activeBit += 6;
+	while (activeBit >= 7) {
+           datavals.push(buffer & 127);
+           buffer = (buffer - (buffer & 127)) >> 7;
+           activeBit -= 7;
+        }
+    }
+    var lcheck = codeChars.indexOf(inCode[inCode.length-1]);
+    if (lcheck !== check) {
+       window.alert("Code check digit is wrong");
+       return;
+    }
+
+
+    var selects = document.getElementsByClassName("building");
+    for (var i=0; i<selects.length; i++) {
+       selects[i].value = datavals[i];
+    }
+    updateCode();
+    if (document.getElementById("outcode").value !== inCode) {
+        document.getElementById("outcode").value = "Sanity check failed, that code broke me.";
+    }
+
+}
+
+ 
+
+
+</script>
+  </head>
+
+  <body onload="loadSelects()">
+    <table>
+      <tr>
+        <td>Black</td> <td>Mine</td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td>
+      </tr>
+<tr>
+        <td>Yellow</td> <td>Field</td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td>
+      </tr><tr>
+        <td>Green</td> <td>Forest</td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td>
+      </tr><tr>
+        <td>Purple</td> <td>Garden</td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td>
+      </tr><tr>
+        <td>Red</td> <td>Clay Pit</td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td>
+      </tr><tr>
+        <td>Blue</td> <td>Cave</td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td> <td><select class="building"></select></td>
+      </tr>
+    </table>
+    Board code: <input type="text" readonly id="outcode" size=80 /> <br>
+    Code to decode: <input type="text" id="incode" size=80 /> <button onClick="decode()">Decode!</button>
+  </body>
+</html>
+	
